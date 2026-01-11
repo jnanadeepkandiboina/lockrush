@@ -1,0 +1,15 @@
+{
+  "name": "lockrush_engine",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "lockrush_engine_bg.wasm",
+    "lockrush_engine.js",
+    "lockrush_engine.d.ts"
+  ],
+  "main": "lockrush_engine.js",
+  "types": "lockrush_engine.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
