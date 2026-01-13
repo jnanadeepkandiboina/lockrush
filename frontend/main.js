@@ -31,6 +31,7 @@ let lastRank = "?";
 let missFlash = 0;
 let shake = 0;
 let saved = false;
+let tapCooldown = false;
 
 function resize() {
     const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
@@ -223,8 +224,12 @@ function startGame() {
 }
 
 function handleTap() {
-    if (uiState !== "playing") return;
+    if (uiState !== "playing" || tapCooldown) return;
     tap();
+    tapCooldown = true;
+    setTimeout(() => {
+        tapCooldown = false;
+    }, 100);
 }
 
 async function run() {
@@ -237,6 +242,12 @@ async function run() {
         handleTap();
     });
     window.addEventListener('resize', resize);
+    window.addEventListener("keydown", (e) => {
+        if (e.code === "Space") {
+            e.preventDefault();
+            handleTap();
+        }
+    });
     
     startBtn.onclick = () => {
         const name = document.getElementById("name").value;
