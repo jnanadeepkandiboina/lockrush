@@ -1,4 +1,5 @@
 use axum::{
+    http::HeaderValue,
     Extension, Json, Router,
     routing::{get, post},
 };
@@ -68,7 +69,7 @@ async fn main() {
     let pool = PgPool::connect(&db_url).await.unwrap();
 
     let cors = CorsLayer::new()
-        .allow_origin("https://lockrush.vercel.app".parse().unwrap())
+        .allow_origin(HeaderValue::from_str("https://lockrush.vercel.app").unwrap())
         .allow_methods(Any)
         .allow_headers(Any);
 
