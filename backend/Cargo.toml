@@ -1,7 +1,7 @@
 [package]
 name = "backend"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
 axum = "0.6"
@@ -12,3 +12,4 @@ tower-http = { version = "0.4", features = ["cors"] }
 
 sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres"] }
 dotenvy = "0.15"
+url = "2"

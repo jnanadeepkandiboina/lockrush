@@ -10,6 +10,7 @@ use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tower_http::cors::{Any, CorsLayer};
+use url::Url;
 
 #[derive(Deserialize)]
 struct SubmitScore {
@@ -80,6 +81,18 @@ async fn main() {
     dotenv().ok();
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
+
+    if let Ok(url) = url::Url::parse(&db_url) {
+        println!(
+            "Attempting to connect to database. User: {:?}, Host: {:?}, Port: {:?}",
+            url.username(),
+            url.host_str(),
+            url.port()
+        );
+    } else {
+        println!("Failed to parse DATABASE_URL.");
+    }
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(std::time::Duration::from_secs(10))
