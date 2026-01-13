@@ -21,9 +21,29 @@ let missFlash = 0;
 let shake = 0;
 let saved = false;
 
+function resize() {
+    // Determine the smaller dimension of the viewport
+    const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
+    canvas.width = size;
+    canvas.height = size;
+
+    // Redraw the game if it's active
+    if (uiState === "playing" || uiState === "gameover") {
+        const state = get_state();
+        draw(state);
+        if (uiState === "gameover") {
+            drawGameOver(state);
+        }
+    }
+}
+
+
 function draw(state) {
+    const w = canvas.width;
+    const h = canvas.height;
+
     ctx.fillStyle = "rgba(2, 6, 23, 0.35)";
-    ctx.fillRect(0, 0, 500, 500);
+    ctx.fillRect(0, 0, w, h);
 
     let ox = 0;
     let oy = 0;
@@ -34,33 +54,33 @@ function draw(state) {
         shake *= 0.8;
     }
 
-    const cx = 250 + ox;
-    const cy = 250 + oy;
-    const radius = 190;
+    const cx = w / 2 + ox;
+    const cy = h / 2 + oy;
+    const radius = w * 0.38; // 190 / 500
 
     // Outer circle
     ctx.strokeStyle = "white";
-    ctx.lineWidth = 5;
+    ctx.lineWidth = w * 0.01; // 5 / 500
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.stroke();
 
     // Inner circle
     ctx.beginPath();
-    ctx.arc(cx, cy, radius - 55, 0, Math.PI * 2);
+    ctx.arc(cx, cy, radius - w * 0.11, 0, Math.PI * 2); // 55 / 500
     ctx.stroke();
 
     // Yellow dot
-    const dx = cx + Math.cos(state.dot_angle) * (radius - 27);
-    const dy = cy + Math.sin(state.dot_angle) * (radius - 27);
+    const dx = cx + Math.cos(state.dot_angle) * (radius - w * 0.054); // 27 / 500
+    const dy = cy + Math.sin(state.dot_angle) * (radius - w * 0.054);
 
     ctx.fillStyle = "yellow";
     ctx.beginPath();
-    ctx.arc(dx, dy, 22, 0, Math.PI * 2);
+    ctx.arc(dx, dy, w * 0.044, 0, Math.PI * 2); // 22 / 500
     ctx.fill();
 
     // Red bar
-    const inner = radius - 55;
+    const inner = radius - w * 0.11; // 55 / 500
     const outer = radius;
 
     const x1 = cx + Math.cos(state.angle) * inner;
@@ -70,31 +90,32 @@ function draw(state) {
     const y2 = cy + Math.sin(state.angle) * outer;
 
     ctx.strokeStyle = "red";
-    ctx.lineWidth = 8;
+    ctx.lineWidth = w * 0.016; // 8 / 500
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
     // Best Score
-    ctx.font = "22px Arial";
+    ctx.fillStyle = "white";
+    ctx.font = `${w * 0.044}px Arial`; // 22 / 500
     ctx.textAlign = "left";
-    ctx.fillText("BEST: " + bestScore, 20, 40);
+    ctx.fillText("BEST: " + bestScore, w * 0.04, h * 0.08); // 20/500, 40/500
 
     // Score
     ctx.fillStyle = "white";
-    ctx.font = "60px Arial";
+    ctx.font = `${w * 0.12}px Arial`; // 60 / 500
     ctx.textAlign = "center";
-    ctx.fillText(state.score, cx, cy + 20);
+    ctx.fillText(state.score, cx, cy + h * 0.04);
 
     // Lives
-    ctx.font = "24px Arial";
+    ctx.font = `${w * 0.048}px Arial`; // 24 / 500
     ctx.textAlign = "right";
-    ctx.fillText("♥".repeat(state.lives), 480, 40);
+    ctx.fillText("♥".repeat(state.lives), w * 0.96, h * 0.08); // 480/500, 40/500
 
     if (missFlash > 0) {
         ctx.fillStyle = `rgba(255,0,0,${missFlash * 0.25})`;
-        ctx.fillRect(0, 0, 500, 500);
+        ctx.fillRect(0, 0, w, h);
         missFlash *= 0.8;
     }
 }
@@ -141,25 +162,29 @@ function loop(time) {
 }
 
 function drawGameOver(state) {
+    const w = canvas.width;
+    const h = canvas.height;
+
     ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0,0,500,500);
+    ctx.fillRect(0,0,w,h);
 
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
 
-    ctx.font = "40px Arial";
-    ctx.fillText("GAME OVER", 250, 200);
+    ctx.font = `${w * 0.08}px Arial`; // 40 / 500
+    ctx.fillText("GAME OVER", w/2, h * 0.4);
 
     const rank = lastRank;
 
-    ctx.font = "30px Arial";
-    ctx.fillText("Score: " + state.score, 250, 250);
-    ctx.fillText("Rank: #" + rank, 250, 290);
+    ctx.font = `${w * 0.06}px Arial`; // 30 / 500
+    ctx.fillText("Score: " + state.score, w/2, h * 0.5);
+    ctx.fillText("Rank: #" + rank, w/2, h * 0.58);
 
-    ctx.fillText("Press L for Leaderboard", 250, 360);
-
-    ctx.font = "20px Arial";
-    ctx.fillText("Click or Press Space to Replay", 250, 320);
+    ctx.font = `${w * 0.04}px Arial`; // 20 / 500
+    ctx.fillText("Click or Press Space to Replay", w/2, h * 0.64);
+    
+    ctx.font = `${w * 0.05}px Arial`; // 25 / 500
+    ctx.fillText("Press L for Leaderboard", w/2, h * 0.72);
 }
 
 function saveScore(state) {
@@ -260,45 +285,64 @@ backBtn.onclick = (e) => {
     leaderboard.style.display = "none";
     canvas.style.display = "block";
     uiState = "gameover";
-    draw(get_state());
-    drawGameOver(get_state());
+    // Need to redraw after showing canvas again
+    resize();
 };
 
 
 async function run() {
     await init();
+    
+    // Setup event listeners
+    window.addEventListener("keydown", e => {
+        if (e.code === "Space") {
+            handleInput();
+        } else if (e.code === "KeyL" && uiState === "gameover") {
+            showLeaderboard();
+        }
+    });
+    window.addEventListener("click", handleInput);
+    window.addEventListener("touchstart", handleInput);
+    window.addEventListener('resize', resize);
+    
+    // Initial setup
+    if (player) {
+        login.style.display = "none";
+        game.style.display = "block";
+        fetchBestScore();
+    } else {
+        game.style.display = "none";
+    }
+
+    startBtn.onclick = () => {
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+
+        if (!name || !email) return alert("Enter name and email");
+
+        player = { name, email };
+        localStorage.setItem("lockrush_player", JSON.stringify(player));
+
+        login.style.display = "none";
+        game.style.display = "block";
+        uiState = "playing";
+
+        last = performance.now();
+        new_game(); // Start a new game
+        requestAnimationFrame(loop);
+
+        fetchBestScore();
+    };
+    
     new_game();
+    // Set initial size and start loop
+    resize();
     requestAnimationFrame(loop);
 }
 
-if (player) {
-    login.style.display = "none";
-    game.style.display = "block";
-    fetchBestScore();
-}
-startBtn.onclick = () => {
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
-
-    if (!name || !email) return alert("Enter name and email");
-
-    player = { name, email };
-    localStorage.setItem("lockrush_player", JSON.stringify(player));
-
-    login.style.display = "none";
-    game.style.display = "block";
-    uiState = "playing";
-
-    last = performance.now();
-    requestAnimationFrame(loop);
-
-    fetchBestScore();
-};
-
-
-run();
-
-function handleInput() {
+function handleInput(e) {
+    // Prevent click from firing immediately after touch
+    if (e) e.preventDefault();
     if (uiState === "login") return;
     if (uiState === "leaderboard") return;
 
@@ -309,18 +353,11 @@ function handleInput() {
         new_game();
         saved = false;
         last = performance.now();
-        requestAnimationFrame(loop);
+        // No need to call loop here, it's already running
         return;
     }
 
     tap();
 }
 
-window.addEventListener("keydown", e => {
-    if (e.code === "Space") {
-        handleInput();
-    } else if (e.code === "KeyL" && uiState === "gameover") {
-        showLeaderboard();
-    }
-});
-window.addEventListener("click", handleInput);
+run();

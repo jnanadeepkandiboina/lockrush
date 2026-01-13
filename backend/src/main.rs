@@ -93,12 +93,33 @@ async fn main() {
         println!("Failed to parse DATABASE_URL.");
     }
 
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(std::time::Duration::from_secs(10))
-        .connect(&db_url)
-        .await
-        .expect("Failed to connect to Postgres");
+    let pool = {
+        let mut pool = None;
+        for i in 1..=5 {
+            println!("Attempting to connect to Postgres... (Attempt {})", i);
+            let conn_result = PgPoolOptions::new()
+                .max_connections(5)
+                .acquire_timeout(std::time::Duration::from_secs(10))
+                .connect(&db_url)
+                .await;
+
+            match conn_result {
+                Ok(p) => {
+                    pool = Some(p);
+                    println!("Successfully connected to Postgres.");
+                    break;
+                }
+                Err(e) => {
+                    eprintln!("Failed to connect on attempt {}: {}", i, e);
+                    if i < 5 {
+                        println!("Retrying in 5 seconds...");
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                    }
+                }
+            }
+        }
+        pool.expect("Failed to connect to Postgres after 5 attempts")
+    };
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
