@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT name, email, score, time FROM scores ORDER BY score DESC, time ASC LIMIT 10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "time",
+        "type_info": "Float4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b6e48e4c7977493f29a9887921614cbdaaa1f26543fb8abf66f4ca22e2202861"
+}

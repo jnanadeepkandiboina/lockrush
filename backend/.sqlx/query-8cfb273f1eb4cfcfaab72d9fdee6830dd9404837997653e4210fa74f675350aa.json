@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO scores (name, email, score, time)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (email)\n        DO UPDATE SET\n            name = EXCLUDED.name,\n            score = EXCLUDED.score,\n            time = EXCLUDED.time\n        WHERE\n            EXCLUDED.score > scores.score\n            OR (EXCLUDED.score = scores.score AND EXCLUDED.time < scores.time)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4",
+        "Float4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8cfb273f1eb4cfcfaab72d9fdee6830dd9404837997653e4210fa74f675350aa"
+}
