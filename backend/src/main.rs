@@ -1,5 +1,6 @@
 use axum::{
-    http::HeaderValue,
+    http::StatusCode,
+    response::IntoResponse,
     Extension, Json, Router,
     routing::{get, post},
 };
@@ -25,8 +26,8 @@ struct ScoreRow {
     time: f32,
 }
 
-async fn submit_score(Extension(pool): Extension<PgPool>, Json(data): Json<SubmitScore>) {
-    sqlx::query!(
+async fn submit_score(Extension(pool): Extension<PgPool>, Json(data): Json<SubmitScore>) -> impl IntoResponse {
+    let result = sqlx::query!(
         "
         INSERT INTO scores (name, email, score, time)
         VALUES ($1, $2, $3, $4)
@@ -45,20 +46,32 @@ async fn submit_score(Extension(pool): Extension<PgPool>, Json(data): Json<Submi
         data.time
     )
     .execute(&pool)
-    .await
-    .unwrap();
+    .await;
+
+    match result {
+        Ok(_) => StatusCode::CREATED,
+        Err(e) => {
+            eprintln!("Failed to submit score: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
 }
 
-async fn leaderboard(Extension(pool): Extension<PgPool>) -> Json<Vec<ScoreRow>> {
-    let rows = sqlx::query_as!(
+async fn leaderboard(Extension(pool): Extension<PgPool>) -> impl IntoResponse {
+    let result = sqlx::query_as!(
         ScoreRow,
         "SELECT name, email, score, time FROM scores ORDER BY score DESC, time ASC LIMIT 10"
     )
     .fetch_all(&pool)
-    .await
-    .unwrap();
+    .await;
 
-    Json(rows)
+    match result {
+        Ok(rows) => Json(rows).into_response(),
+        Err(e) => {
+            eprintln!("Failed to fetch leaderboard: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch leaderboard.").into_response()
+        }
+    }
 }
 
 #[tokio::main]
@@ -69,7 +82,7 @@ async fn main() {
     let pool = PgPool::connect(&db_url).await.unwrap();
 
     let cors = CorsLayer::new()
-        .allow_origin(HeaderValue::from_str("https://lockrush.vercel.app").unwrap())
+        .allow_origin(Any)
         .allow_methods(Any)
         .allow_headers(Any);
 
@@ -79,7 +92,10 @@ async fn main() {
         .layer(Extension(pool))
         .layer(cors);
 
-    axum::Server::bind(&"0.0.0.0:3001".parse().unwrap())
+    let port = std::env::var("PORT").unwrap_or("3001".to_string());
+    let addr = format!("0.0.0.0:{}", port);
+
+    axum::Server::bind(&addr.parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();
