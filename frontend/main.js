@@ -236,11 +236,13 @@ async function run() {
     await init();
     
     // Setup event listeners
-    window.addEventListener("click", handleTap);
-    window.addEventListener("touchstart", (e) => {
+    window.addEventListener("pointerdown", (e) => {
+        // Only allow left click or finger
+        if (e.pointerType === "mouse" && e.button !== 0) return;
         e.preventDefault();
         handleTap();
-    });
+    }, { passive: false });
+    
     window.addEventListener('resize', resize);
     window.addEventListener("keydown", (e) => {
         if (e.code === "Space") {
