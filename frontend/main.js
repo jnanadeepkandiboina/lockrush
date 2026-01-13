@@ -103,11 +103,6 @@ function draw(state) {
 
 function loop(time) {
 
-    if (uiState !== "playing") return;
-    const dt = (time - last) / 1000;
-    last = time;
-
-    update(dt);
     const state = get_state();
 
     if (state.game_over) {
@@ -120,6 +115,12 @@ function loop(time) {
         drawGameOver(state);
         return;
     }
+
+    if (uiState !== "playing") return;
+    const dt = (time - last) / 1000;
+    last = time;
+
+    update(dt);
 
 
     if (state.score > prevScore) {
@@ -289,40 +290,32 @@ startBtn.onclick = () => {
 
 run();
 
-window.addEventListener("keydown", e => {
+function handleInput() {
     if (uiState === "login") return;
     if (uiState === "leaderboard") return;
-    if (e.code === "Space") {
-        const s = get_state();
-        if (s.game_over) {
-            uiState = "playing";
-            new_game();
-            saved = false;
-            last = performance.now();
-            requestAnimationFrame(loop);
-        } else {
-            tap();
-        }
-    }
-});
 
-window.addEventListener("click", () => {
-    if (uiState === "login") return;
-    if (uiState === "leaderboard") return;
     const s = get_state();
-    if (s.game_over) {
+
+    if (uiState === "gameover") {
         uiState = "playing";
         new_game();
         saved = false;
         last = performance.now();
         requestAnimationFrame(loop);
-    } else {
-        tap();
+        return;
     }
-});
+
+    tap();
+}
 
 window.addEventListener("keydown", e => {
-  if (e.code === "KeyL" && uiState === "gameover") {
-    showLeaderboard();
-  }
+    if (e.code === "Space") handleInput();
+});
+window.addEventListener("click", handleInput);
+
+
+window.addEventListener("keydown", e => {
+    if (e.code === "KeyL" && uiState === "gameover") {
+        showLeaderboard();
+    }
 });
