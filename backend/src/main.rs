@@ -1,12 +1,12 @@
 use axum::{
+    Extension, Json, Router,
     routing::{get, post},
-    Json, Router, Extension,
 };
+use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use tower_http::cors::{CorsLayer, Any};
 use std::env;
-use dotenvy::dotenv;
+use tower_http::cors::{Any, CorsLayer};
 
 #[derive(Deserialize)]
 struct SubmitScore {
@@ -24,10 +24,7 @@ struct ScoreRow {
     time: f32,
 }
 
-async fn submit_score(
-    Extension(pool): Extension<PgPool>,
-    Json(data): Json<SubmitScore>,
-) {
+async fn submit_score(Extension(pool): Extension<PgPool>, Json(data): Json<SubmitScore>) {
     sqlx::query!(
         "
         INSERT INTO scores (name, email, score, time)
@@ -49,17 +46,13 @@ async fn submit_score(
     .execute(&pool)
     .await
     .unwrap();
-
 }
 
-async fn leaderboard(
-    Extension(pool): Extension<PgPool>,
-) -> Json<Vec<ScoreRow>> {
+async fn leaderboard(Extension(pool): Extension<PgPool>) -> Json<Vec<ScoreRow>> {
     let rows = sqlx::query_as!(
         ScoreRow,
         "SELECT name, email, score, time FROM scores ORDER BY score DESC, time ASC LIMIT 10"
     )
-
     .fetch_all(&pool)
     .await
     .unwrap();
@@ -75,7 +68,7 @@ async fn main() {
     let pool = PgPool::connect(&db_url).await.unwrap();
 
     let cors = CorsLayer::new()
-        .allow_origin(Any)
+        .allow_origin("https://lockrush.vercel.app".parse().unwrap())
         .allow_methods(Any)
         .allow_headers(Any);
 

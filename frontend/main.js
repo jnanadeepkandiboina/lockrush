@@ -1,6 +1,6 @@
 import init, { new_game, update, get_state, tap } from "./wasm/lockrush_engine.js";
 
-const API = "http://localhost:3001";
+const API = "https://lockrush-production.up.railway.app";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
