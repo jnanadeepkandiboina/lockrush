@@ -1,0 +1,42 @@
+body {
+  margin: 0;
+  background: #050b1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+canvas {
+  background: #020617;
+  z-index: 1;
+}
+#login {
+  color: white;
+  text-align: center;
+}
+
+#login input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 18px;
+}
+
+#login button {
+  padding: 10px 30px;
+  font-size: 18px;
+  cursor: pointer;
+}
+#leaderboard {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background: rgba(0,0,0,0.95);
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 10;
+  min-width: 300px;
+}
+

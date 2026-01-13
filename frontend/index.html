@@ -2,10 +2,23 @@
 <html>
 <head>
   <title>LOCKRUSH</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>LOCKRUSH WASM TEST</h1>
-  <div id="output">Loading...</div>
+  <div id="login">
+    <h1>LOCKRUSH</h1>
+    <input id="name" placeholder="Your name" />
+    <input id="email" placeholder="Your email" />
+    <button id="start">START</button>
+  </div>
+
+  <canvas id="game" width="500" height="500"></canvas>
+
+  <div id="leaderboard" style="display:none; color:white; text-align:center;">
+    <h2>Global Top 10</h2>
+    <div id="scores"></div>
+    <button id="back">Back</button>
+  </div>
 
   <script type="module" src="main.js"></script>
 </body>
