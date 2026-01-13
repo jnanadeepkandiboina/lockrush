@@ -7,6 +7,7 @@ use axum::{
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tower_http::cors::{Any, CorsLayer};
 
@@ -79,7 +80,12 @@ async fn main() {
     dotenv().ok();
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
-    let pool = PgPool::connect(&db_url).await.unwrap();
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(std::time::Duration::from_secs(10))
+        .connect(&db_url)
+        .await
+        .expect("Failed to connect to Postgres");
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
