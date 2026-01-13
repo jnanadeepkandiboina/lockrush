@@ -13,7 +13,16 @@
     <button id="start">START</button>
   </div>
 
-  <canvas id="game"></canvas>
+  <div id="game-container" style="display: none; position: relative;">
+    <canvas id="game"></canvas>
+    <div id="game-over">
+        <h2>GAME OVER</h2>
+        <p>Score: <span id="final-score">0</span></p>
+        <p>Rank: #<span id="final-rank">?</span></p>
+        <button id="replay-btn">Replay</button>
+        <button id="leaderboard-btn">Leaderboard</button>
+    </div>
+  </div>
 
   <div id="leaderboard" style="display:none; color:white; text-align:center;">
     <h2>Global Top 10</h2>
