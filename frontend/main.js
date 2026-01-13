@@ -102,40 +102,43 @@ function draw(state) {
 
 
 function loop(time) {
+
     const state = get_state();
 
-    // Always render something
-    draw(state);
-
-    if (uiState === "gameover") {
+    if (state.game_over) {
+        uiState = "gameover";
+        if (!saved) {
+            saveScore(state);
+            saved = true;
+        }
+        draw(state);
         drawGameOver(state);
-        requestAnimationFrame(loop);
         return;
     }
 
-    if (uiState === "leaderboard") {
-        requestAnimationFrame(loop);
-        return;
-    }
-
-    // Only simulate physics while playing
+    if (uiState !== "playing") return;
     const dt = (time - last) / 1000;
     last = time;
 
     update(dt);
 
-    if (state.game_over) {
-        uiState = "gameover";
 
-        if (!saved) {
-            saveScore(state);
-            saved = true;
-        }
+    if (state.score > prevScore) {
+        shake = 4;
     }
+
+    if (state.lives < prevLives) {
+        missFlash = 1;
+        shake = 12;
+    }
+
+    prevScore = state.score;
+    prevLives = state.lives;
+
+    draw(state);
 
     requestAnimationFrame(loop);
 }
-
 
 function drawGameOver(state) {
     ctx.fillStyle = "rgba(0,0,0,0.7)";
@@ -178,7 +181,7 @@ function saveScore(state) {
 
     localStorage.setItem("lockrush_scores", JSON.stringify(list));
 
-    fetch("${API}/submit-score", {
+    fetch(`${API}/submit-score`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -189,7 +192,7 @@ function saveScore(state) {
         })
     });
 
-    fetch("${API}/leaderboard")
+    fetch(`${API}/leaderboard`)
     .then(r => r.json())
     .then(data => {
         let rank = 1;
@@ -217,7 +220,7 @@ function saveScore(state) {
 }
 
 async function fetchBestScore() {
-    const res = await fetch("${API}/leaderboard");
+    const res = await fetch(`${API}/leaderboard`);
     const data = await res.json();
 
     const me = data.find(s => s.email === player.email);
@@ -231,28 +234,35 @@ const backBtn = document.getElementById("back");
 
 async function showLeaderboard() {
     uiState = "leaderboard";
-
-    const res = await fetch(API + "/leaderboard");
-    const data = await res.json();
-
-    scoresDiv.innerHTML = "";
-    data.forEach((s, i) => {
-        scoresDiv.innerHTML += `<p>#${i+1} ${s.name} — ${s.score}</p>`;
-    });
-
     leaderboard.style.display = "block";
     canvas.style.display = "none";
-}
+    scoresDiv.innerHTML = "<p>Loading...</p>";
 
+    try {
+        const res = await fetch(`${API}/leaderboard`);
+        const data = await res.json();
+
+        if (uiState !== "leaderboard") return;
+
+        scoresDiv.innerHTML = "";
+        data.forEach((s, i) => {
+            scoresDiv.innerHTML += `<p>#${i+1} ${s.name} — ${s.score}</p>`;
+        });
+    } catch(e) {
+        if (uiState === "leaderboard") {
+            scoresDiv.innerHTML = `<p style="color: red">Error loading scores</p>`;
+        }
+    }
+}
 
 backBtn.onclick = (e) => {
     e.stopPropagation();
     leaderboard.style.display = "none";
     canvas.style.display = "block";
     uiState = "gameover";
+    draw(get_state());
     drawGameOver(get_state());
 };
-
 
 
 async function run() {
@@ -288,7 +298,8 @@ startBtn.onclick = () => {
 
 run();
 
-function handleTap() {
+function handleInput() {
+    if (uiState === "login") return;
     if (uiState === "leaderboard") return;
 
     const s = get_state();
@@ -298,18 +309,18 @@ function handleTap() {
         new_game();
         saved = false;
         last = performance.now();
+        requestAnimationFrame(loop);
         return;
     }
 
     tap();
 }
 
-window.addEventListener("click", handleTap);
-
 window.addEventListener("keydown", e => {
-    if (e.code === "Space") handleTap();
-
-    if (e.code === "KeyL" && uiState === "gameover") {
+    if (e.code === "Space") {
+        handleInput();
+    } else if (e.code === "KeyL" && uiState === "gameover") {
         showLeaderboard();
     }
 });
+window.addEventListener("click", handleInput);
