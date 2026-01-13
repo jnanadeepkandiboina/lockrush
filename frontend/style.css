@@ -14,6 +14,11 @@ canvas {
 #login {
   color: white;
   text-align: center;
+
+  display: flex;
+  flex-direction: column;   /* 👈 stack vertically */
+  align-items: center;
+  gap: 15px;                /* spacing between fields */
 }
 
 #login input {
@@ -26,10 +31,12 @@ canvas {
 }
 
 #login button {
-  padding: 10px 30px;
+  padding: 12px 40px;
   font-size: 18px;
   cursor: pointer;
+  border-radius: 4px;
 }
+
 #leaderboard {
   position: fixed;
   top: 50%;
