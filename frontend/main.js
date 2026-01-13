@@ -102,43 +102,40 @@ function draw(state) {
 
 
 function loop(time) {
-
     const state = get_state();
 
-    if (state.game_over) {
-        uiState = "gameover";
-        if (!saved) {
-            saveScore(state);
-            saved = true;
-        }
-        draw(state);
+    // Always render something
+    draw(state);
+
+    if (uiState === "gameover") {
         drawGameOver(state);
+        requestAnimationFrame(loop);
         return;
     }
 
-    if (uiState !== "playing") return;
+    if (uiState === "leaderboard") {
+        requestAnimationFrame(loop);
+        return;
+    }
+
+    // Only simulate physics while playing
     const dt = (time - last) / 1000;
     last = time;
 
     update(dt);
 
+    if (state.game_over) {
+        uiState = "gameover";
 
-    if (state.score > prevScore) {
-        shake = 4;
+        if (!saved) {
+            saveScore(state);
+            saved = true;
+        }
     }
-
-    if (state.lives < prevLives) {
-        missFlash = 1;
-        shake = 12;
-    }
-
-    prevScore = state.score;
-    prevLives = state.lives;
-
-    draw(state);
 
     requestAnimationFrame(loop);
 }
+
 
 function drawGameOver(state) {
     ctx.fillStyle = "rgba(0,0,0,0.7)";
@@ -235,7 +232,7 @@ const backBtn = document.getElementById("back");
 async function showLeaderboard() {
     uiState = "leaderboard";
 
-    const res = await fetch("${API}/leaderboard");
+    const res = await fetch(API + "/leaderboard");
     const data = await res.json();
 
     scoresDiv.innerHTML = "";
@@ -246,6 +243,7 @@ async function showLeaderboard() {
     leaderboard.style.display = "block";
     canvas.style.display = "none";
 }
+
 
 backBtn.onclick = (e) => {
     e.stopPropagation();
@@ -290,8 +288,7 @@ startBtn.onclick = () => {
 
 run();
 
-function handleInput() {
-    if (uiState === "login") return;
+function handleTap() {
     if (uiState === "leaderboard") return;
 
     const s = get_state();
@@ -301,20 +298,17 @@ function handleInput() {
         new_game();
         saved = false;
         last = performance.now();
-        requestAnimationFrame(loop);
         return;
     }
 
     tap();
 }
 
-window.addEventListener("keydown", e => {
-    if (e.code === "Space") handleInput();
-});
-window.addEventListener("click", handleInput);
-
+window.addEventListener("click", handleTap);
 
 window.addEventListener("keydown", e => {
+    if (e.code === "Space") handleTap();
+
     if (e.code === "KeyL" && uiState === "gameover") {
         showLeaderboard();
     }
