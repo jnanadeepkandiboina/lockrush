@@ -29,6 +29,9 @@ let last = 0;
 let prevScore = 0;
 let prevLives = 3;
 let bestScore = 0;
+let currentScore = 0;
+let lastGameTime = 0;
+let hasPlayed = false;
 let uiState = player ? "pre-game" : "login";
 let lastRank = "?";
 let missFlash = 0;
@@ -107,6 +110,9 @@ function draw(state) {
 
 function showGameOver(state) {
     uiState = "gameover";
+    hasPlayed = true;
+    currentScore = state.score;
+    lastGameTime = state.time_alive;
     finalScoreEl.innerText = state.score;
     finalRankEl.innerText = "?"; // Placeholder
     gameOverUI.style.display = "flex";
@@ -217,6 +223,16 @@ async function showLeaderboard() {
                 scoresDiv.innerHTML += `<hr><p>#${playerIndex + 1} ${playerScore.name} (best) — ${playerScore.score}</p>`;
             }
         }
+        if (hasPlayed) {
+            let currentRank = 1;
+            for (const s of data) {
+                if (s.score > currentScore || (s.score === currentScore && s.time < lastGameTime)) {
+                    currentRank++;
+                }
+            }
+            scoresDiv.innerHTML += `<hr><p>#${currentRank} ${player.name} (current score) — ${currentScore}</p>`;
+        }
+
 
     } catch (e) {
         if (uiState === "leaderboard") {
