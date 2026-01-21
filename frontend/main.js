@@ -7,6 +7,7 @@ const login = document.getElementById("login");
 const gameContainer = document.getElementById("game-container");
 const canvas = document.getElementById("game");
 const gameOverUI = document.getElementById("game-over");
+const startPanel = document.getElementById("start-panel");
 
 // Buttons
 const startBtn = document.getElementById("start");
@@ -28,7 +29,7 @@ let last = 0;
 let prevScore = 0;
 let prevLives = 3;
 let bestScore = 0;
-let uiState = player ? "playing" : "login";
+let uiState = player ? "pre-game" : "login";
 let lastRank = "?";
 let missFlash = 0;
 let shake = 0;
@@ -39,7 +40,7 @@ function resize() {
     const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
     canvas.width = size;
     canvas.height = size;
-    if (uiState === "playing" || uiState === "gameover") {
+    if (uiState === "playing" || uiState === "gameover" || uiState === "pre-game") {
         const state = get_state();
         draw(state);
     }
@@ -214,19 +215,32 @@ backBtn.onclick = (e) => {
     uiState = "gameover";
 };
 
-function startGame() {
-    canvas.style.pointerEvents = "auto";
+function enterPreGame() {
     login.style.display = "none";
     gameContainer.style.display = "block";
     gameOverUI.style.display = "none";
+    startPanel.style.display = "flex";
+    uiState = "pre-game";
+    new_game();
+    const state = get_state();
+    draw(state);
+}
+
+function startGame() {
+    canvas.style.pointerEvents = "auto";
+    startPanel.style.display = "none";
+    gameOverUI.style.display = "none";
     uiState = "playing";
     saved = false;
-    new_game();
     last = performance.now();
     requestAnimationFrame(loop);
 }
 
 function handleTap() {
+    if (uiState === "pre-game") {
+        startGame();
+        return;
+    }
     if (uiState !== "playing" || tapCooldown) return;
     tap();
     tapCooldown = true;
@@ -240,7 +254,7 @@ async function run() {
     
     // Setup event listeners
     window.addEventListener("pointerdown", (e) => {
-         if (uiState !== "playing") return;
+        if (uiState !== "playing" && uiState !== "pre-game") return;
         // Only allow left click or finger
         if (e.pointerType === "mouse" && e.button !== 0) return;
         e.preventDefault();
@@ -249,7 +263,7 @@ async function run() {
     
     window.addEventListener('resize', resize);
     window.addEventListener("keydown", (e) => {
-         if (uiState !== "playing") return;
+        if (uiState !== "playing" && uiState !== "pre-game") return;
         if (e.code === "Space") {
             e.preventDefault();
             handleTap();
@@ -260,21 +274,21 @@ async function run() {
         const name = document.getElementById("name").value;
         const email = document.getElementById("email").value;
         if (!name || !email) return alert("Enter name and email");
-        login.style.display = "none";
-        gameContainer.style.display = "block";
+        player = { name, email };
+        localStorage.setItem("lockrush_player", JSON.stringify(player));
         fetchBestScore();
-        startGame();
+        enterPreGame();
     };
 
-    replayBtn.onclick = startGame;
+    replayBtn.onclick = enterPreGame;
     leaderboardBtn.onclick = showLeaderboard;
 
     // Initial UI setup
     if (player) {
-        login.style.display = "none";
-        gameContainer.style.display = "block";
-        fetchBestScore();
-        startGame();
+        fetchBestScore().then(() => {
+            enterPreGame();
+            resize();
+        });
     } else {
         gameContainer.style.display = "none";
         login.style.display = "flex";
