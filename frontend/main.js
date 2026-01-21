@@ -186,27 +186,40 @@ function saveScore(state) {
             }
         }
 
-        // BEST rank (now correct)
-        let bestRank = null;
+        // ===============================
+        // BUILD BEST-SCORE LEADERBOARD
+        // ===============================
+        const bestMap = new Map();
 
-        for (let i = 0; i < data.length; i++) {
-            if (
-                data[i].email === player.email &&
-                data[i].score === bestScore
-            ) {
-                bestRank = i + 1;
-                break;
+        for (const s of data) {
+            const prev = bestMap.get(s.email);
+            if (!prev || s.score > prev.score) {
+                bestMap.set(s.email, s);
             }
         }
 
-        // fallback if not found
-        if (bestRank === null) {
-            bestRank = data.filter(s => s.score > bestScore).length + 1;
+        const bestLeaderboard = Array.from(bestMap.values())
+            .sort((a, b) => b.score - a.score);
+
+        // ===============================
+        // BEST RANK (FROM BEST LEADERBOARD)
+        // ===============================
+        let bestRank = bestLeaderboard.findIndex(
+            s => s.email === player.email
+        );
+
+        if (bestRank !== -1) {
+            bestRank += 1;
+        } else {
+            // fallback if not found
+            bestRank = bestLeaderboard.filter(s => s.score > bestScore).length + 1;
         }
 
 
         currentRankEl.innerText = currentRank;
         bestRankEl.innerText = bestRank;
+        finalRankEl.innerText = currentRank;
+        lastRank = currentRank;
     });
 
 }
