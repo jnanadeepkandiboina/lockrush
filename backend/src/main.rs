@@ -10,7 +10,6 @@ use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tower_http::cors::{Any, CorsLayer};
-use url::Url;
 
 #[derive(Deserialize)]
 struct SubmitScore {
@@ -20,7 +19,7 @@ struct SubmitScore {
     time: f32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, sqlx::FromRow)]
 struct ScoreRow {
     name: String,
     email: String,
@@ -29,7 +28,7 @@ struct ScoreRow {
 }
 
 async fn submit_score(Extension(pool): Extension<PgPool>, Json(data): Json<SubmitScore>) -> impl IntoResponse {
-    let result = sqlx::query!(
+    let result = sqlx::query(
         "
         INSERT INTO scores (name, email, score, time)
         VALUES ($1, $2, $3, $4)
@@ -38,15 +37,13 @@ async fn submit_score(Extension(pool): Extension<PgPool>, Json(data): Json<Submi
             name = EXCLUDED.name,
             score = EXCLUDED.score,
             time = EXCLUDED.time
-        WHERE
-            EXCLUDED.score > scores.score
-            OR (EXCLUDED.score = scores.score AND EXCLUDED.time < scores.time)
         ",
-        data.name,
-        data.email,
-        data.score,
-        data.time
     )
+        .bind(data.name)
+        .bind(data.email)
+        .bind(data.score)
+        .bind(data.time)
+
     .execute(&pool)
     .await;
 
@@ -60,8 +57,7 @@ async fn submit_score(Extension(pool): Extension<PgPool>, Json(data): Json<Submi
 }
 
 async fn leaderboard(Extension(pool): Extension<PgPool>) -> impl IntoResponse {
-    let result = sqlx::query_as!(
-        ScoreRow,
+    let result = sqlx::query_as::<sqlx::Postgres, ScoreRow>(
         "SELECT name, email, score, time FROM scores ORDER BY score DESC, time ASC LIMIT 10"
     )
     .fetch_all(&pool)
@@ -78,7 +74,6 @@ async fn leaderboard(Extension(pool): Extension<PgPool>) -> impl IntoResponse {
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
 
