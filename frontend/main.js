@@ -280,7 +280,10 @@ async function run() {
         enterPreGame();
     };
 
-    replayBtn.onclick = enterPreGame;
+    replayBtn.onclick = () => {
+        new_game();
+        startGame();
+    };
     leaderboardBtn.onclick = showLeaderboard;
 
     // Initial UI setup
