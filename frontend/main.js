@@ -21,6 +21,8 @@ const ctx = canvas.getContext("2d");
 
 let player = JSON.parse(localStorage.getItem("lockrush_player"));
 
+canvas.style.pointerEvents = "none";
+
 // State
 let last = 0;
 let prevScore = 0;
@@ -213,6 +215,7 @@ backBtn.onclick = (e) => {
 };
 
 function startGame() {
+    canvas.style.pointerEvents = "auto";
     login.style.display = "none";
     gameContainer.style.display = "block";
     gameOverUI.style.display = "none";
@@ -237,6 +240,7 @@ async function run() {
     
     // Setup event listeners
     window.addEventListener("pointerdown", (e) => {
+         if (uiState !== "playing") return;
         // Only allow left click or finger
         if (e.pointerType === "mouse" && e.button !== 0) return;
         e.preventDefault();
@@ -245,6 +249,7 @@ async function run() {
     
     window.addEventListener('resize', resize);
     window.addEventListener("keydown", (e) => {
+         if (uiState !== "playing") return;
         if (e.code === "Space") {
             e.preventDefault();
             handleTap();
@@ -255,8 +260,8 @@ async function run() {
         const name = document.getElementById("name").value;
         const email = document.getElementById("email").value;
         if (!name || !email) return alert("Enter name and email");
-        player = { name, email };
-        localStorage.setItem("lockrush_player", JSON.stringify(player));
+        login.style.display = "none";
+        gameContainer.style.display = "block";
         fetchBestScore();
         startGame();
     };
