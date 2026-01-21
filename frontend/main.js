@@ -224,13 +224,17 @@ async function showLeaderboard() {
             }
         }
         if (hasPlayed) {
-            let currentRank = 1;
-            for (const s of data) {
-                if (s.score > currentScore || (s.score === currentScore && s.time < lastGameTime)) {
-                    currentRank++;
+            const bestScoreEntry = data.find(s => s.email === player.email);
+            const bestScoreValue = bestScoreEntry ? bestScoreEntry.score : 0;
+            if (currentScore !== bestScoreValue) {
+                let currentRank = 1;
+                for (const s of data) {
+                    if (s.score > currentScore || (s.score === currentScore && s.time < lastGameTime)) {
+                        currentRank++;
+                    }
                 }
+                scoresDiv.innerHTML += `<hr><p>#${currentRank} ${player.name} (current score) — ${currentScore}</p>`;
             }
-            scoresDiv.innerHTML += `<hr><p>#${currentRank} ${player.name} (current score) — ${currentScore}</p>`;
         }
 
 
