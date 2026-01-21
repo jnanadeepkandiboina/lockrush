@@ -258,8 +258,23 @@ async function showLeaderboard() {
             }
         }
 
-        // ---- TOP 10 ----
-        data.slice(0, 10).forEach((s, i) => {
+        // ---- BUILD BEST-SCORE LEADERBOARD ----
+        const bestMap = new Map();
+
+        // keep best score per user
+        for (const s of data) {
+            const prev = bestMap.get(s.email);
+            if (!prev || s.score > prev.score) {
+                bestMap.set(s.email, s);
+            }
+        }
+
+        // convert to array & sort by BEST score
+        const bestLeaderboard = Array.from(bestMap.values())
+            .sort((a, b) => b.score - a.score);
+
+        // ---- TOP 10 (BEST SCORES ONLY) ----
+        bestLeaderboard.slice(0, 10).forEach((s, i) => {
             scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} — ${s.score}</p>`;
         });
 
