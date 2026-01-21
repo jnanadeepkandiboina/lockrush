@@ -197,9 +197,27 @@ async function showLeaderboard() {
         const data = await res.json();
         if (uiState !== "leaderboard") return;
         scoresDiv.innerHTML = "";
-        data.forEach((s, i) => {
-            scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} — ${s.score}</p>`;
+
+        let playerInTop10 = false;
+        // Show top 10
+        data.slice(0, 10).forEach((s, i) => {
+            if (s.email === player.email) {
+                scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} (best) — ${s.score}</p>`;
+                playerInTop10 = true;
+            } else {
+                scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} — ${s.score}</p>`;
+            }
         });
+
+        // If player is not in top 10, find and show their rank
+        if (!playerInTop10) {
+            const playerIndex = data.findIndex(s => s.email === player.email);
+            if (playerIndex !== -1) {
+                const playerScore = data[playerIndex];
+                scoresDiv.innerHTML += `<hr><p>#${playerIndex + 1} ${playerScore.name} (best) — ${playerScore.score}</p>`;
+            }
+        }
+
     } catch (e) {
         if (uiState === "leaderboard") {
             scoresDiv.innerHTML = `<p style="color: red">Error loading scores</p>`;
