@@ -117,7 +117,6 @@ function showGameOver(state) {
     currentScore = state.score;
     lastGameTime = state.time_alive;
     finalScoreEl.innerText = state.score;
-    finalRankEl.innerText = "?"; // Placeholder
     gameOverUI.style.display = "flex";
     if (!saved) {
         saveScore(state);
