@@ -236,18 +236,48 @@ async function showLeaderboard() {
 
         scoresDiv.innerHTML = "";
 
-        // ---- BEST RANK ----
-        let bestRank = 1;
+        // ===============================
+        // BUILD BEST-SCORE LEADERBOARD
+        // ===============================
+        const bestMap = new Map();
+
         for (const s of data) {
-            if (s.score > bestScore) {
-                bestRank++;
+            const prev = bestMap.get(s.email);
+            if (!prev || s.score > prev.score) {
+                bestMap.set(s.email, s);
             }
         }
 
-        // ---- CURRENT RANK ----
-        let currentRank = null;
+        const bestLeaderboard = Array.from(bestMap.values())
+            .sort((a, b) => b.score - a.score);
+
+        // ===============================
+        // TOP 10 (BEST SCORES ONLY)
+        // ===============================
+        bestLeaderboard.slice(0, 10).forEach((s, i) => {
+            scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} — ${s.score}</p>`;
+        });
+
+        scoresDiv.innerHTML += "<hr>";
+
+        // ===============================
+        // BEST RANK (FROM BEST LEADERBOARD)
+        // ===============================
+        let bestRank = bestLeaderboard.findIndex(
+            s => s.email === player.email
+        );
+
+        if (bestRank !== -1) {
+            bestRank += 1;
+            scoresDiv.innerHTML +=
+                `<p>#${bestRank} ${player.name} (BEST) — ${bestScore}</p>`;
+        }
+
+        // ===============================
+        // CURRENT RANK (FROM RAW DATA)
+        // ===============================
         if (hasPlayed) {
-            currentRank = 1;
+            let currentRank = 1;
             for (const s of data) {
                 if (
                     s.score > currentScore ||
@@ -256,43 +286,18 @@ async function showLeaderboard() {
                     currentRank++;
                 }
             }
-        }
 
-        // ---- BUILD BEST-SCORE LEADERBOARD ----
-        const bestMap = new Map();
-
-        // keep best score per user
-        for (const s of data) {
-            const prev = bestMap.get(s.email);
-            if (!prev || s.score > prev.score) {
-                bestMap.set(s.email, s);
+            if (currentScore !== bestScore) {
+                scoresDiv.innerHTML +=
+                    `<p>#${currentRank} ${player.name} (CURRENT) — ${currentScore}</p>`;
             }
-        }
-
-        // convert to array & sort by BEST score
-        const bestLeaderboard = Array.from(bestMap.values())
-            .sort((a, b) => b.score - a.score);
-
-        // ---- TOP 10 (BEST SCORES ONLY) ----
-        bestLeaderboard.slice(0, 10).forEach((s, i) => {
-            scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} — ${s.score}</p>`;
-        });
-
-        scoresDiv.innerHTML += "<hr>";
-
-        // ---- PLAYER RANKS ----
-        if (bestRank !== null) {
-            scoresDiv.innerHTML += `<p>#${bestRank} ${player.name} (BEST) — ${bestScore}</p>`;
-        }
-
-        if (hasPlayed && currentScore !== bestScore) {
-            scoresDiv.innerHTML += `<p>#${currentRank} ${player.name} (CURRENT) — ${currentScore}</p>`;
         }
 
     } catch (e) {
         scoresDiv.innerHTML = `<p style="color:red">Error loading leaderboard</p>`;
     }
 }
+
 
 
 backBtn.onclick = (e) => {
