@@ -8,6 +8,9 @@ const gameContainer = document.getElementById("game-container");
 const canvas = document.getElementById("game");
 const gameOverUI = document.getElementById("game-over");
 const startPanel = document.getElementById("start-panel");
+const currentRankEl = document.getElementById("current-rank");
+const bestRankEl = document.getElementById("best-rank");
+
 
 // Buttons
 const startBtn = document.getElementById("start");
@@ -164,17 +167,31 @@ function saveScore(state) {
     fetch(`${API}/leaderboard`)
     .then(r => r.json())
     .then(data => {
-        let rank = 1;
+        // ---- CURRENT SCORE RANK ----
+        let currentRank = 1;
         for (const s of data) {
-            if (s.score > state.score || (s.score === state.score && s.time < state.time_alive)) {
-                rank++;
+            if (
+                s.score > state.score ||
+                (s.score === state.score && s.time < state.time_alive)
+            ) {
+                currentRank++;
             }
         }
-        lastRank = rank;
+
+        // ---- BEST SCORE RANK ----
+        let bestRank = 1;
+        for (const s of data) {
+            if (s.score > bestScore) {
+                bestRank++;
+            }
+        }
+
         if (uiState === "gameover") {
-            finalRankEl.innerText = rank;
+            currentRankEl.innerText = currentRank;
+            bestRankEl.innerText = bestRank;
         }
     });
+
 
     if (state.score > bestScore) {
         bestScore = state.score;
@@ -187,6 +204,7 @@ async function fetchBestScore() {
     const me = data.find(s => s.email === player.email);
     bestScore = me ? me.score : 0;
 }
+
 
 const leaderboardUI = document.getElementById("leaderboard");
 const scoresDiv = document.getElementById("scores");
