@@ -183,12 +183,9 @@ function saveScore(state) {
         }
 
         // ---- BEST SCORE RANK ----
-        let bestRank = 1;
-        for (const s of data) {
-            if (s.score > bestScore) {
-                bestRank++;
-            }
-        }
+        const playerIndex = data.findIndex(s => s.email === player.email);
+        const bestRank = playerIndex !== -1 ? playerIndex + 1 : "?";
+
 
         if (uiState === "gameover") {
             currentRankEl.innerText = currentRank;
