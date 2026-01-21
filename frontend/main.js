@@ -237,11 +237,10 @@ async function showLeaderboard() {
         scoresDiv.innerHTML = "";
 
         // ---- BEST RANK ----
-        let bestRank = null;
-        for (let i = 0; i < data.length; i++) {
-            if (data[i].score === bestScore && data[i].email === player.email) {
-                bestRank = i + 1;
-                break;
+        let bestRank = 1;
+        for (const s of data) {
+            if (s.score > bestScore) {
+                bestRank++;
             }
         }
 
