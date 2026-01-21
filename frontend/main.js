@@ -204,40 +204,39 @@ async function showLeaderboard() {
         if (uiState !== "leaderboard") return;
         scoresDiv.innerHTML = "";
 
+        const bestScoreEntry = data.find(s => s.email === player.email);
+        const bestScoreValue = bestScoreEntry ? bestScoreEntry.score : 0;
+        const isCurrentBest = hasPlayed && currentScore === bestScoreValue;
+
         let playerInTop10 = false;
         // Show top 10
         data.slice(0, 10).forEach((s, i) => {
             if (s.email === player.email) {
-                scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} (best) — ${s.score}</p>`;
                 playerInTop10 = true;
+                const label = isCurrentBest ? "(best, current)" : "(best)";
+                scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} ${label} — ${s.score}</p>`;
             } else {
                 scoresDiv.innerHTML += `<p>#${i + 1} ${s.name} — ${s.score}</p>`;
             }
         });
 
         // If player is not in top 10, find and show their rank
-        if (!playerInTop10) {
+        if (!playerInTop10 && bestScoreEntry) {
             const playerIndex = data.findIndex(s => s.email === player.email);
-            if (playerIndex !== -1) {
-                const playerScore = data[playerIndex];
-                scoresDiv.innerHTML += `<hr><p>#${playerIndex + 1} ${playerScore.name} (best) — ${playerScore.score}</p>`;
-            }
+            const label = isCurrentBest ? "(best, current)" : "(best)";
+            scoresDiv.innerHTML += `<hr><p>#${playerIndex + 1} ${bestScoreEntry.name} ${label} — ${bestScoreEntry.score}</p>`;
         }
-        if (hasPlayed) {
-            const bestScoreEntry = data.find(s => s.email === player.email);
-            const bestScoreValue = bestScoreEntry ? bestScoreEntry.score : 0;
-            if (currentScore !== bestScoreValue) {
-                let currentRank = 1;
-                for (const s of data) {
-                    if (s.score > currentScore || (s.score === currentScore && s.time < lastGameTime)) {
-                        currentRank++;
-                    }
+
+        // Show current score if it's NOT the best score.
+        if (hasPlayed && !isCurrentBest) {
+            let currentRank = 1;
+            for (const s of data) {
+                if (s.score > currentScore || (s.score === currentScore && s.time < lastGameTime)) {
+                    currentRank++;
                 }
-                scoresDiv.innerHTML += `<hr><p>#${currentRank} ${player.name} (current score) — ${currentScore}</p>`;
             }
+            scoresDiv.innerHTML += `<hr><p>#${currentRank} ${player.name} (current) — ${currentScore}</p>`;
         }
-
-
     } catch (e) {
         if (uiState === "leaderboard") {
             scoresDiv.innerHTML = `<p style="color: red">Error loading scores</p>`;
