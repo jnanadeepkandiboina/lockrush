@@ -126,6 +126,12 @@ function showGameOver(state) {
 }
 
 function loop(time) {
+    if (uiState !== "playing") return;
+
+    const dt = (time - last) / 1000;
+    last = time;
+    update(dt);
+    
     const state = get_state();
 
     if (state.game_over) {
@@ -134,10 +140,6 @@ function loop(time) {
         return; // Stop the loop
     }
 
-    if (uiState !== "playing") return;
-    const dt = (time - last) / 1000;
-    last = time;
-    update(dt);
     if (state.score > prevScore) {
         shake = 4;
     }
